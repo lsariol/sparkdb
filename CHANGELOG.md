@@ -2,6 +2,11 @@
 
 All notable changes to sparkdb. Versions follow [semantic versioning](https://semver.org).
 
+## v1.0.1
+
+### Fixed
+- **The default database is `AdminDB`**, the name it has on the server. The compose file said `Admin_DB`, which was never created because the data folder already existed, and the healthcheck logged `database "Admin" does not exist` every 5 seconds. It now checks `AdminDB`.
+
 ## v1.0.0
 
 The first release deployed by Lighthouse v1.0.0.

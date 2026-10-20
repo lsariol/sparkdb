@@ -31,7 +31,7 @@ The reference for **sparkdb**, the Postgres server behind every project on the `
 | Container | `sparkdb`, compose project `sparkdb` |
 | Reached at | `sparkdb:5432` from containers on `spark`; `127.0.0.1:5000` from the server itself |
 | Data | `/srv/server/storage/sparkdb/data` on the server, mounted at `/var/lib/postgresql/data` |
-| Admin user | `Admin`, default database `Admin_DB` |
+| Admin user | `Admin`, default database `AdminDB` |
 | Health | `pg_isready`, every 5 s |
 | Deployed by | Lighthouse, on version tags: `deploy: releases`, `tier: data`, `backup: postgres` |
 
@@ -46,9 +46,9 @@ On the server, over SSH.
 | Task | Command |
 |---|---|
 | Is it up? | `docker exec sparkdb pg_isready` |
-| A SQL prompt as the admin | `docker exec -it sparkdb psql -U Admin -d Admin_DB` |
-| List databases | `docker exec sparkdb psql -U Admin -d Admin_DB -c '\l'` |
-| List roles | `docker exec sparkdb psql -U Admin -d Admin_DB -c '\du'` |
+| A SQL prompt as the admin | `docker exec -it sparkdb psql -U Admin -d AdminDB` |
+| List databases | `docker exec sparkdb psql -U Admin -d AdminDB -c '\l'` |
+| List roles | `docker exec sparkdb psql -U Admin -d AdminDB -c '\du'` |
 | Back up everything now | `sudo mkdir -p /srv/backups/manual && docker exec sparkdb pg_dumpall -U Admin \| gzip \| sudo tee /srv/backups/manual/sparkdb-$(date +%F).sql.gz > /dev/null` |
 | Its log | `docker logs sparkdb` |
 | Deploy a new version | Tag a release (`v1.0.1`) and push the tag; Lighthouse does the rest |
@@ -64,7 +64,7 @@ Everything is in `docker-compose.yaml`.
 | Setting | Value | Notes |
 |---|---|---|
 | `POSTGRES_USER` | `Admin` | The superuser. Only used when the data folder is first created |
-| `POSTGRES_DB` | `Admin_DB` | Created with the superuser. Only used at first creation |
+| `POSTGRES_DB` | `AdminDB` | Created with the superuser. Only used at first creation |
 | `POSTGRES_PASSWORD` | `${SPARKDB_DATABASE_PASSWORD}` | From Cove. Only used at first creation; after that the password stored in the database is the real one |
 | Port | `127.0.0.1:5000:5432` | The server only. Containers use `sparkdb:5432` on `spark` |
 | Network | `spark` (external) | Shared with Cove, Lighthouse and the projects |
@@ -139,7 +139,7 @@ A `pg_dumpall` file holds every database and every role, with their password has
 **Restoring.** A `pg_dumpall` file is a whole-server restore: every role and every database, replayed with `psql`. It belongs on an **empty** server (a new data folder), since replaying it over existing databases fails on what already exists:
 
 ```bash
-gunzip -c /srv/backups/sparkdb/<file>.sql.gz | docker exec -i sparkdb psql -U Admin -d Admin_DB
+gunzip -c /srv/backups/sparkdb/<file>.sql.gz | docker exec -i sparkdb psql -U Admin -d AdminDB
 ```
 
 To restore **one** database, a per-database dump is easier: `pg_dump -Fc -d <db>` makes one, `pg_restore -d <db>` restores it into an empty database owned by the project's owner role. Pulling one database out of a `pg_dumpall` file means cutting its section out of the text by hand.
